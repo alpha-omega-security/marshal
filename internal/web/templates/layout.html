@@ -1,0 +1,150 @@
+{{define "head_open"}}
+<!doctype html>
+<html lang="en" data-theme="{{.Theme}}">
+<head>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>marshal</title>
+  <script src="/static/vendor/tailwindcss-browser-4.3.0.js"></script>
+  <link rel="stylesheet" href="/static/vendor/basecoat-0.3.11.min.css">
+  <link rel="stylesheet" href="/static/theme.css">
+  <script src="/static/vendor/basecoat-0.3.11.min.js" defer></script>
+  <script src="/static/vendor/htmx-2.0.6.min.js"></script>
+  <script src="/static/vendor/lucide-0.545.0.min.js"></script>
+</head>
+<body>
+
+<aside class="sidebar" data-side="left" aria-hidden="false">
+  <nav aria-label="Sidebar">
+    <header>
+      <div class="flex items-center w-full gap-1">
+        <a href="/" class="btn-ghost p-2 h-14 flex-1 justify-start">
+          <span class="bg-primary text-primary-foreground flex aspect-square size-10 items-center justify-center rounded-lg">
+            <i data-lucide="layers" class="size-6"></i>
+          </span>
+          <span class="grid flex-1 text-left leading-tight">
+            <span class="truncate font-medium">marshal</span>
+            <span class="truncate text-xs text-muted-foreground">local</span>
+          </span>
+        </a>
+      </div>
+    </header>
+    <section>
+      <div role="group">
+        <ul id="nav">
+          {{$nav := .Nav}}
+          <li>
+            <a href="/packages"{{if and (eq $nav "packages") (not .FilterInput)}} aria-current="page"{{end}}><i data-lucide="package"></i><span>Packages</span></a>
+            {{if eq $nav "packages"}}
+              {{template "sub_nav" .}}
+            {{end}}
+          </li>
+          <li>
+            <a href="/repositories"{{if and (eq $nav "repositories") (not .FilterInput)}} aria-current="page"{{end}}><i data-lucide="folder-git-2"></i><span>Repositories</span></a>
+            {{if eq $nav "repositories"}}
+              {{template "sub_nav" .}}
+            {{end}}
+          </li>
+          <li>
+            <a href="/owners"{{if and (eq $nav "owners") (not .FilterInput)}} aria-current="page"{{end}}><i data-lucide="building"></i><span>Owners</span></a>
+            {{if eq $nav "owners"}}
+              {{template "sub_nav" .}}
+            {{end}}
+          </li>
+          <li>
+            <a href="/maintainers"{{if and (eq $nav "maintainers") (not .FilterInput)}} aria-current="page"{{end}}><i data-lucide="users"></i><span>Maintainers</span></a>
+            {{if eq $nav "maintainers"}}
+              {{template "sub_nav" .}}
+            {{end}}
+          </li>
+          <li>
+            <a href="/advisories"{{if and (eq $nav "advisories") (not .FilterInput)}} aria-current="page"{{end}}><i data-lucide="shield-alert"></i><span>Advisories</span></a>
+            {{if eq $nav "advisories"}}
+              {{template "sub_nav" .}}
+            {{end}}
+          </li>
+          <li><a href="/sboms"{{if eq $nav "sboms"}} aria-current="page"{{end}}><i data-lucide="file-json"></i><span>SBOMs</span></a></li>
+        </ul>
+      </div>
+    </section>
+  </nav>
+</aside>
+
+<main class="main">
+{{end}}
+
+{{define "save_view_form"}}
+<details class="relative">
+  <summary class="btn btn-ghost text-sm cursor-pointer flex items-center gap-1"><i data-lucide="bookmark-plus" class="size-4"></i>Save</summary>
+  <form method="post" action="/filters/save"
+        class="absolute right-0 top-full mt-1 z-50 p-3 border rounded shadow-md min-w-[300px]"
+        style="background-color: var(--background);">
+    <input type="hidden" name="section" value="{{.Section}}">
+    <input type="hidden" name="q" value="{{.Q}}">
+    <input type="hidden" name="cols" value="{{.Cols}}">
+    <input type="hidden" name="sort" value="{{.Sort}}">
+    <input type="hidden" name="dir" value="{{.Dir}}">
+    <label class="block text-xs text-muted-foreground mb-1">Name this view</label>
+    <input type="text" name="name" required placeholder="High-risk npm" class="input w-full text-sm mb-2">
+    <button type="submit" class="btn btn-primary text-sm w-full">Save</button>
+  </form>
+</details>
+{{end}}
+
+{{define "sub_nav"}}
+  {{if or .CannedFilters .SavedFilters}}
+    <ul class="ml-6 mt-1 space-y-0.5 text-sm">
+      {{range .CannedFilters}}
+        <li>
+          <a href="{{.Href}}" class="flex items-center gap-2 px-2 py-1 rounded hover:bg-muted{{if .Active}} bg-muted text-foreground font-medium{{end}}">
+            <i data-lucide="{{.Icon}}" class="size-3.5 text-muted-foreground"></i>
+            <span>{{.Label}}</span>
+          </a>
+        </li>
+      {{end}}
+      {{if .SavedFilters}}
+        <li class="px-2 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Saved</li>
+        {{range .SavedFilters}}
+          <li class="group flex items-center">
+            <a href="{{.Href}}" class="flex-1 flex items-center gap-2 px-2 py-1 rounded hover:bg-muted{{if .Active}} bg-muted text-foreground font-medium{{end}}">
+              <i data-lucide="bookmark" class="size-3.5 text-muted-foreground"></i>
+              <span class="truncate">{{.Label}}</span>
+            </a>
+            <form method="post" action="/filters/delete" class="opacity-0 group-hover:opacity-100" onsubmit="return confirm('Delete saved filter?')">
+              <input type="hidden" name="id" value="{{.ID}}">
+              <button type="submit" class="p-1 text-muted-foreground hover:text-destructive" title="Delete">
+                <i data-lucide="x" class="size-3"></i>
+              </button>
+            </form>
+          </li>
+        {{end}}
+      {{end}}
+    </ul>
+  {{end}}
+{{end}}
+
+{{define "pager"}}
+{{if gt .TotalPages 1}}
+  <nav class="flex items-center justify-between gap-3 mt-3 text-sm" aria-label="Pagination">
+    <div class="text-muted-foreground">
+      Page {{.Page}} of {{.TotalPages}}
+      <span class="text-xs ml-2">({{.Total}} rows, {{.PerPage}} per page)</span>
+    </div>
+    <div class="flex gap-1">
+      {{if .HasPrev}}<a href="{{.PrevHref}}" class="btn btn-ghost text-sm" rel="prev">← Prev</a>{{end}}
+      {{if .HasNext}}<a href="{{.NextHref}}" class="btn btn-ghost text-sm" rel="next">Next →</a>{{end}}
+    </div>
+  </nav>
+{{end}}
+{{end}}
+
+{{define "head_close"}}
+</main>
+
+<script>
+  if (window.lucide) { lucide.createIcons(); }
+</script>
+</body>
+</html>
+{{end}}

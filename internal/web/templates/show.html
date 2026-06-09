@@ -1,0 +1,136 @@
+{{define "show.html"}}
+{{template "head_open" .}}
+<div class="p-6 max-w-5xl">
+
+  <header class="flex items-start gap-4 mb-8 pb-6 border-b">
+    {{if .Icon}}
+      <div class="flex items-center justify-center size-12 rounded-lg bg-secondary text-secondary-foreground shrink-0">
+        <i data-lucide="{{.Icon}}" class="size-6"></i>
+      </div>
+    {{end}}
+    <div class="flex-1 min-w-0">
+      <h1 class="text-2xl font-medium break-all leading-tight">{{.Heading}}</h1>
+      {{if .Subhead}}<p class="text-xs text-muted-foreground font-mono mt-1 break-all">{{.Subhead}}</p>{{end}}
+    </div>
+    {{if .ExternalHref}}
+      <a href="{{.ExternalHref}}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost text-sm shrink-0 inline-flex items-center gap-1.5">
+        <i data-lucide="external-link" class="size-3.5"></i>
+        Open
+      </a>
+    {{end}}
+  </header>
+
+  {{if .Groups}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      {{range .Groups}}
+        <section class="rounded-lg border bg-card p-4">
+          <h2 class="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{{.Heading}}</h2>
+          <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 text-sm">
+            {{range .Fields}}
+              <dt class="text-muted-foreground">{{.Label}}</dt>
+              <dd class="break-words font-medium">{{renderValue .}}</dd>
+            {{end}}
+          </dl>
+        </section>
+      {{end}}
+    </div>
+  {{else if .Fields}}
+    <section class="rounded-lg border bg-card p-4 mb-8">
+      <dl class="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
+        {{range .Fields}}
+          <dt class="text-muted-foreground font-mono text-xs">{{.Label}}</dt>
+          <dd class="break-all">
+            {{if .IsTime}}{{.Time.Format "2006-01-02 15:04"}}{{else}}{{.Value}}{{end}}
+          </dd>
+        {{end}}
+      </dl>
+    </section>
+  {{end}}
+
+  {{if .VersionsInSBOMs}}
+    <section class="mb-8">
+      <h2 class="text-lg font-medium mb-3">Versions across SBOMs</h2>
+      <div class="rounded-lg border bg-card overflow-x-auto">
+        <table class="table w-full text-sm">
+          <thead>
+            <tr>
+              <th>SBOM</th>
+              <th>Version</th>
+              <th>Loaded</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .VersionsInSBOMs}}
+              <tr>
+                <td class="font-mono text-xs">
+                  <a href="/sboms/{{.ImportID}}" class="hover:underline">{{.ImportBase}}</a>
+                </td>
+                <td class="font-mono text-xs">{{if .Version}}{{.Version}}{{else}}<span class="text-muted-foreground">none</span>{{end}}</td>
+                <td class="text-xs text-muted-foreground">{{.LoadedAt}}</td>
+              </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {{end}}
+
+  {{if .AffectedPackages}}
+    <section class="mb-8">
+      <h2 class="text-lg font-medium mb-3">Affected packages</h2>
+      <div class="rounded-lg border bg-card overflow-x-auto">
+        <table class="table w-full text-sm">
+          <thead>
+            <tr>
+              <th>Package</th>
+              <th>Ecosystem</th>
+              <th>Vulnerable range</th>
+              <th>First patched</th>
+              <th>Observed here</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .AffectedPackages}}
+              <tr {{if not .Effective}}class="text-muted-foreground"{{end}}>
+                <td class="font-mono text-xs">
+                  <a href="/packages/{{.PackageID}}" class="hover:underline">{{if .Namespace}}{{.Namespace}}/{{end}}{{.Name}}</a>
+                  {{if .Effective}}<span class="ml-2 text-[10px] uppercase tracking-wider text-destructive">affecting</span>{{end}}
+                </td>
+                <td class="text-xs">{{.Ecosystem}}</td>
+                <td class="font-mono text-xs break-all">{{if .VulnerableRange}}{{.VulnerableRange}}{{else}}<span class="text-muted-foreground">—</span>{{end}}</td>
+                <td class="font-mono text-xs">{{if .FirstPatched}}{{.FirstPatched}}{{else}}<span class="text-muted-foreground">unpatched</span>{{end}}</td>
+                <td class="font-mono text-xs">{{if .ObservedVersions}}{{.ObservedVersions}}{{else}}<span class="text-muted-foreground">none</span>{{end}}</td>
+              </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {{end}}
+
+  {{range .Related}}
+    <section class="mb-6">
+      <div class="flex items-baseline gap-3 mb-3">
+        <h2 class="text-lg font-medium">{{.Heading}}</h2>
+        {{if .FilteredListHref}}
+          <a href="{{.FilteredListHref}}" class="text-sm text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-1">
+            {{.FilteredListLabel}}
+            <i data-lucide="arrow-right" class="size-3"></i>
+          </a>
+        {{end}}
+      </div>
+      {{if .Links}}
+        <ul class="space-y-1">
+          {{range .Links}}
+            <li>
+              <a href="{{.Href}}" class="text-sm hover:underline">{{.Label}}</a>
+              {{if .Sub}}<span class="text-xs text-muted-foreground ml-2">{{.Sub}}</span>{{end}}
+            </li>
+          {{end}}
+        </ul>
+      {{end}}
+    </section>
+  {{end}}
+</div>
+{{template "head_close" .}}
+{{end}}

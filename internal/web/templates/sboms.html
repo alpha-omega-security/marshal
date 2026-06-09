@@ -1,0 +1,77 @@
+{{define "sboms.html"}}
+{{template "head_open" .}}
+<div class="p-6 max-w-6xl">
+  <div class="flex items-baseline justify-between mb-4">
+    <h1 class="text-2xl font-medium">SBOMs</h1>
+    <div class="text-sm text-muted-foreground">{{len .Imports}} loaded</div>
+  </div>
+
+  {{if .Flash}}<div class="mb-4 p-3 rounded bg-muted text-sm">{{.Flash}}</div>{{end}}
+  {{if .FlashErr}}<div class="mb-4 p-3 rounded border border-destructive text-destructive text-sm">{{.FlashErr}}</div>{{end}}
+
+  <form method="post" action="/sboms/add" enctype="multipart/form-data" class="mb-2 flex gap-2 items-center">
+    <input
+      type="file"
+      name="file"
+      accept=".json,.xml,.cdx.json,.spdx.json,application/json,text/xml"
+      class="input flex-1 text-sm"
+      required>
+    <button type="submit" class="btn btn-primary">Upload</button>
+  </form>
+  <p class="text-xs text-muted-foreground mb-6">
+    Upload a CycloneDX or SPDX file (JSON or XML). Then run <code class="font-mono">marshal enrich</code> to populate package metadata.
+  </p>
+
+  <div class="rounded-lg border overflow-x-auto">
+    <table class="table w-full text-sm">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Format</th>
+          <th>Subject</th>
+          <th class="text-right">Packages</th>
+          <th>Enrichment</th>
+          <th>Loaded</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Imports}}
+          <tr>
+            <td class="font-mono text-xs">
+              <a href="/sboms/{{.ID}}" class="hover:underline">{{.Base}}</a>
+              <div class="text-muted-foreground text-[10px]">{{.Path}}</div>
+            </td>
+            <td class="text-xs text-muted-foreground">{{.Format}}{{if .SpecVersion}} {{.SpecVersion}}{{end}}</td>
+            <td>{{.Subject}}</td>
+            <td class="text-right tabular-nums">{{.PackageCount}}</td>
+            <td class="text-xs">
+              {{if eq .EnrichmentStatus "running"}}
+                <span class="text-foreground">running…</span>
+              {{else if eq .EnrichmentStatus "pending"}}
+                <span class="text-muted-foreground">queued</span>
+              {{else if eq .EnrichmentStatus "done"}}
+                <span class="text-muted-foreground">done{{if .EnrichmentTook}} ({{.EnrichmentTook}}){{end}}</span>
+              {{else if eq .EnrichmentStatus "failed"}}
+                <span class="text-destructive" title="{{.EnrichmentError}}">failed</span>
+              {{else}}
+                <span class="text-muted-foreground">—</span>
+              {{end}}
+            </td>
+            <td class="text-xs text-muted-foreground">{{.LoadedAt}}</td>
+            <td>
+              <form method="post" action="/sboms/delete" onsubmit="return confirm('Remove this import record? Packages will stay.')">
+                <input type="hidden" name="id" value="{{.ID}}">
+                <button type="submit" class="btn btn-ghost text-xs" title="Removes the import record. Packages are kept since they may have come from other sources.">Remove</button>
+              </form>
+            </td>
+          </tr>
+        {{else}}
+          <tr><td colspan="7" class="text-center py-12 text-muted-foreground">No SBOMs loaded. Upload one above, or run <code class="font-mono">marshal load &lt;path&gt;</code>.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{template "head_close" .}}
+{{end}}

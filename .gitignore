@@ -1,0 +1,6 @@
+/marshal
+/marshal.db
+/marshal.db-shm
+/marshal.db-wal
+*.db-journal
+.DS_Store
